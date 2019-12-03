@@ -1,5 +1,9 @@
 #!/bin/zsh
 
+# 2019-11-22 CB
+# Added an echo of the current deferral value at line 324.
+# Modified updateGUI function to run open commands as the logged in user.
+
 # This script is meant to be used with Jamf Pro and makes use of Jamf Helper.
 # The idea behind this script is that it alerts the user that there are required OS
 # updates that need to be installed. Rather than forcing updates to take place through the
@@ -124,18 +128,15 @@ fi
 if [[ "$OSMajorVersion" -ge 14 ]]; then
     #SUGuide="by clicking on the Apple menu, clicking System Preferences and clicking Software Update to install any available updates."
     SUGuide="by navigating to:
-
  > System Preferences > Software Update"
 else
     #SUGuide="by opening up the App Store located in the Applications folder and clicking on the Updates tab to install any available updates."
     SUIGuide="by navigating to:
-
  > App Store > Updates tab"
 fi
 
 # Message to let user to contact IT
 ContactMsg="There seems to have been an error installing the updates. You can try again $SUGuide
-
 If the error persists, please contact $ITContact."
 
 # Message to display when computer is running off battery
@@ -143,23 +144,17 @@ no_ac_power="The computer is currently running off battery and is not plugged in
 
 # Standard Update Message
 StandardUpdatePrompt="There is an OS update available for your Mac. Please click Continue to proceed to Software Update to run this update. If you are unable to start the process at this time, you may choose to postpone by one day.
-
 Attempts left to postpone: $CurrentDeferralValue
-
 You may install macOS software updates at any time $SUGuide"
 
 # Forced Update Message
 ForcedUpdatePrompt="There are software updates available for your Mac that require you to restart. You have already postponed updates the maximum number of times.
-
 Please save your work and click 'Update' otherwise this message will disappear and the computer will restart automatically."
 
 # Message shown when running CLI updates
 HUDMessage="Please save your work and quit all other applications. macOS software updates are being installed in the background. Do not turn off this computer during this time.
-
 This message will go away when updates are complete and closing it will not stop the update process.
-
 If you feel too much time has passed, please contact $ITContact
-
 "
 
 ## Functions ##
@@ -230,9 +225,9 @@ updateRestartAction (){
 updateGUI (){
     # Update through the GUI
     if [[ "$OSMajorVersion" -ge 14 ]]; then
-        /usr/bin/open "/System/Library/CoreServices/Software Update.app"
+        su -l $LoggedInUser -c "/usr/bin/open /System/Library/CoreServices/Software\ Update.app"
     elif [[ "$OSMajorVersion" -ge 8 ]] && [[ "$OSMajorVersion" -le 13 ]]; then
-        /usr/bin/open macappstore://showUpdatesPage
+        su -l $LoggedInUser -c "/usr/bin/open macappstore://showUpdatesPage"
     fi
 }
 
@@ -326,6 +321,7 @@ else
     
     # Someone is logged in. Prompt if any updates require a restart ONLY IF the update timer has not reached zero
     if [[ "$RestartRequired" != "" ]]; then
+        echo "Deferral currently set to $CurrentDeferralValue"
         if [[ "$CurrentDeferralValue" -gt 0 ]]; then
             # Reduce the timer by 1. The script will run again the next day
             let CurrTimer=$CurrentDeferralValue-1
