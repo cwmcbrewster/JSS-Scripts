@@ -1,9 +1,5 @@
 #!/bin/zsh
 
-# 2019-11-22 CB
-# Added an echo of the current deferral value at line 324.
-# Modified updateGUI function to run open commands as the logged in user.
-
 # This script is meant to be used with Jamf Pro and makes use of Jamf Helper.
 # The idea behind this script is that it alerts the user that there are required OS
 # updates that need to be installed. Rather than forcing updates to take place through the
